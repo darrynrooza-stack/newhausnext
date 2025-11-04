@@ -130,7 +130,7 @@ export const Hero = () => {
           <source src={heroVideo} type="video/webm" />
         </video>
         {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-neutral-dark/60" />
+        <div className="absolute inset-0 bg-neutral-dark/30" />
         {/* Gradient overlay for brand effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-crimson/20 via-transparent to-cyber-teal/20" />
       </div>

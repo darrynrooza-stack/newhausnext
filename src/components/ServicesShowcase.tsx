@@ -12,6 +12,7 @@ const services = [
     stats: ["Over 60% of online shopping is now done via mobile devices", "Supports Apple Pay, Google Pay, Samsung Pay, and more", "PCI-compliant for maximum data security", "Real-time receipts and loyalty integration"],
     gradient: "from-crimson to-red-600",
     shadow: "shadow-crimson/30",
+    showTapToPay: true,
   },
   {
     icon: ShieldAlert,
@@ -26,10 +27,11 @@ const services = [
     icon: POS,
     title: "Modern POS Devices",
     subtitle: "Checkout, Evolved",
-    description: "Upgrade your in-person experience with sleek, fast, and future-ready Point-of-Sale devices. Accept all major payment types—chip, tap, swipe, and mobile—on hardware that just works. With reliable connectivity and customizable branding, you ensure every transaction is frictionless and every interaction feels premium.",
-    stats: ["92% of customers expect contactless options at checkout", "Built-in receipt printing and wireless options", "EMV and PCI-certified for security", "Integrated customer feedback and tipping prompts"],
+    description: "Upgrade your in-person experience with sleek, fast, and future-ready Point-of-Sale solutions. Accept all major payment types—chip, tap, swipe, and mobile—on hardware that just works, or use Tap to Pay to turn your smartphone or tablet into a secure, contactless payment terminal. With reliable connectivity and customizable branding, every transaction is frictionless and every interaction feels premium.",
+    stats: ["92% of customers expect contactless options at checkout", "Tap to Pay: Accept cards, phones, and wearables directly on your device—no extra reader needed", "Built-in receipt printing and wireless options", "EMV and PCI-certified for security", "Integrated customer feedback and tipping prompts"],
     gradient: "from-silver-grey to-slate-700",
     shadow: "shadow-gray-900/40",
+    showPosOverlay: true,
   },
   {
     icon: Globe2,
@@ -128,10 +130,14 @@ const ServicesShowcase = () => {
   }, []);
 
   const handleCardMouseMove = (e: React.MouseEvent<HTMLDivElement>, index: number) => {
-    const card = cardRef.current[index];
-    if (!card) return;
+    const section = cardRef.current[index];
+    if (!section) return;
 
-    const rect = card.getBoundingClientRect();
+    const gradientCard = section.querySelector('.gradient-card') as HTMLElement;
+    const posImage = section.querySelector('.pos-image') as HTMLElement;
+    if (!gradientCard) return;
+
+    const rect = gradientCard.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
@@ -141,23 +147,26 @@ const ServicesShowcase = () => {
     const rotateY = ((x - centerX) / centerX) * 15;
     const rotateX = -((y - centerY) / centerY) * 15;
 
-    // Card zooms to 1.10, icon zooms to 1.65 (50% more than card zoom: 1.10 * 1.5 = 1.65)
-    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.10, 1.10, 1.10)`;
+    gradientCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`;
     
-    const icon = card.querySelector('.service-icon') as HTMLElement;
-    if (icon) {
-      icon.style.transform = 'translateZ(40px) scale(1.5)';
+    if (posImage) {
+      posImage.style.transform = 'scale(2)';
     }
   };
 
   const handleCardMouseLeave = (index: number) => {
-    const card = cardRef.current[index];
-    if (!card) return;
-    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+    const section = cardRef.current[index];
+    if (!section) return;
     
-    const icon = card.querySelector('.service-icon') as HTMLElement;
-    if (icon) {
-      icon.style.transform = 'translateZ(40px) scale(1)';
+    const gradientCard = section.querySelector('.gradient-card') as HTMLElement;
+    const posImage = section.querySelector('.pos-image') as HTMLElement;
+    
+    if (gradientCard) {
+      gradientCard.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+    }
+    
+    if (posImage) {
+      posImage.style.transform = 'scale(1)';
     }
   };
 
@@ -191,23 +200,49 @@ const ServicesShowcase = () => {
               className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} items-center justify-center gap-12 md:gap-16 transition-all duration-700 ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
+              onMouseMove={(e) => handleCardMouseMove(e, index)}
+              onMouseLeave={() => handleCardMouseLeave(index)}
             >
               {/* Gradient Card */}
               <div
-                className={`flex-shrink-0 w-72 h-96 rounded-2xl bg-gradient-to-br ${service.gradient} p-8 shadow-2xl ${service.shadow} flex items-center justify-center transition-transform duration-200 ease-out`}
+                className={`gradient-card flex-shrink-0 w-72 h-96 rounded-2xl bg-gradient-to-br ${service.gradient} p-8 shadow-2xl ${service.shadow} flex items-center justify-center transition-transform duration-200 ease-out relative overflow-hidden`}
                 style={{ transformStyle: 'preserve-3d' }}
-                onMouseMove={(e) => handleCardMouseMove(e, index)}
-                onMouseLeave={() => handleCardMouseLeave(index)}
               >
-                <Icon className="service-icon w-24 h-24 text-white drop-shadow-[0_8px_6px_rgb(0,0,0,0.55)] transition-transform duration-200 ease-out" style={{ transform: 'translateZ(40px)' }} />
+                <Icon className="w-24 h-24 text-white drop-shadow-[0_8px_6px_rgb(0,0,0,0.55)] relative z-10" style={{ transform: 'translateZ(40px)' }} />
               </div>
 
               {/* Text Content */}
               <div className="max-w-xl text-center md:text-left space-y-6">
-                <div>
-                  <h3 className="text-3xl font-bold font-montserrat mb-2">{service.title}</h3>
-                  <p className="text-lg text-primary font-semibold italic">{service.subtitle}</p>
+                <div className="flex items-start justify-center md:justify-start gap-4">
+                  <div>
+                    <h3 className="text-3xl font-bold font-montserrat mb-2">{service.title}</h3>
+                    <p className="text-lg text-primary font-semibold italic">{service.subtitle}</p>
+                  </div>
+                  {service.showPosOverlay && (
+                    <img 
+                      src="/blog-images/opos-terminal.png" 
+                      alt="POS Terminal" 
+                      className="pos-image w-20 h-20 object-contain flex-shrink-0 transition-transform duration-300"
+                    />
+                  )}
                 </div>
+                
+                {service.showTapToPay && (
+                  <div 
+                    className="inline-block animate-in slide-in-from-left duration-700"
+                    style={{ animationDelay: '300ms' }}
+                  >
+                    <div className="px-6 py-3 rounded-full border-2 border-blue-700 bg-blue-700/10 backdrop-blur-sm">
+                      <p className="text-lg font-bold text-blue-700 text-center mb-1">
+                        Now featuring Tap to Pay
+                      </p>
+                      <p className="text-sm text-blue-600 text-center leading-snug">
+                        Accept contactless cards and wallets directly on your mobile device.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
                 <p className="text-lg text-muted-foreground leading-relaxed text-justify">{service.description}</p>
                 <ul className="space-y-2 text-muted-foreground">
                   {service.stats.map((stat, i) => (
